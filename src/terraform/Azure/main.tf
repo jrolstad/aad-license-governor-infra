@@ -184,6 +184,9 @@ resource "azurerm_cosmosdb_sql_container" "cosmoscontainer_groups" {
 
 # Azure Function
 resource "random_uuid" "api_user_impersonation_role" {}
+resource "random_uuid" "directory_contributor_role" {}
+resource "random_uuid" "group_contributor_role" {}
+resource "random_uuid" "licensing_contributor_role" {}
 
 resource "azuread_application" "application_api" {
   display_name     = "${var.service_name}-api-${var.environment}"
@@ -220,7 +223,6 @@ resource "azuread_application" "application_api" {
     }
   }
 
-  resource "random_uuid" "directory_contributor_role" {}
   app_role {
     allowed_member_types = ["User"]
     description          = "Manage Directories"
@@ -230,7 +232,6 @@ resource "azuread_application" "application_api" {
     value                = "DirectoryContributor"
   }
 
-  resource "random_uuid" "group_contributor_role" {}
   app_role {
     allowed_member_types = ["User"]
     description          = "Manage Groups"
@@ -240,7 +241,6 @@ resource "azuread_application" "application_api" {
     value                = "GroupContributor"
   }
 
-  resource "random_uuid" "licensing_contributor_role" {}
   app_role {
     allowed_member_types = ["User"]
     description          = "Manage Licensing"
