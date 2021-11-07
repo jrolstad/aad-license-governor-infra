@@ -1,0 +1,34 @@
+name: terraform-continuous-integration
+
+on:
+  workflow_dispatch:
+  push:
+    branches: '**'
+  pull_request:
+    branches: '**' 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
+        shell: bash
+    environment: production
+    env:
+      working-directory: ./src/terraform/Azure
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+
+    - name: Terraform Init
+      run: terraform init -backend=false
+      working-directory: ./src/terraform/Azure
+
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ./src/terraform/Azure
