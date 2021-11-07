@@ -44,4 +44,13 @@ variable "regions" {
   }
 }
 
+variable "application_owners" {
+  description = "Owners of the Applications"
+  type        = list(string)
+  validation {
+    condition     = length(var.application_owners) > 0
+    error_message = "At least 1 owner must be defined."
+  }
+}
+
 

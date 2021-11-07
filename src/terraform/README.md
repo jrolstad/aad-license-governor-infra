@@ -24,7 +24,7 @@ To configure your develpment environment, use the following steps:
 2. Change your working directory to src/Azure
 3. Using Powershell run az login -t <tenant id>
 ```
-az login - t 335776b5-3fba-4122-bcef-84458b1b8201
+az login -t 335776b5-3fba-4122-bcef-84458b1b8201
 ```
 4. Initialize the project by running src/Azure/scripts/initialize.ps1
 

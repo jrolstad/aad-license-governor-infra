@@ -3,11 +3,11 @@ terraform {
 
   required_providers {
     azurerm = {
-      version = "=2.77.0"
+      version = "=2.84.0"
       source  = "hashicorp/azurerm"
     }
     azuread = {
-      version = "=2.4.0"
+      version = "=2.8.0"
       source  = "hashicorp/azuread"
     }
   }
@@ -37,7 +37,7 @@ locals {
   functions_baseurl             = var.azure_environment == "usgovernment" ? "azurewebsites.us" : "azurewebsites.net"
   api_base_url                  = "${var.service_name}-api-${var.environment}.${local.functions_baseurl}"
   executing_serviceprincipal_id = data.azuread_client_config.current.object_id
-  application_owners            = [local.executing_serviceprincipal_id]
+  application_owners            = distinct(concat(var.application_owners, [local.executing_serviceprincipal_id]))
 }
 
 # Foundation
