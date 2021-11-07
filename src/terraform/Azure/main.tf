@@ -66,8 +66,16 @@ resource "azuread_service_principal" "msgraph" {
   use_existing   = true
 }
 
-resource "azuread_app_role_assignment" "graph_directory_readwriteall" {
-  app_role_id         = azuread_service_principal.msgraph.app_role_ids["Directory.ReadWrite.All"]
+#Directory.Read.All | Required for reading licensed products
+resource "azuread_app_role_assignment" "graph_directory_readall" {
+  app_role_id         = azuread_service_principal.msgraph.app_role_ids["Directory.Read.All"]
+  principal_object_id = azurerm_user_assigned_identity.graph_api_managed_identity.principal_id
+  resource_object_id  = azuread_service_principal.msgraph.object_id
+}
+
+#Group.ReadWrite.All | Required for reading and writing assigned licenses for groups
+resource "azuread_app_role_assignment" "graph_group_readwriteall" {
+  app_role_id         = azuread_service_principal.msgraph.app_role_ids["Group.ReadWrite.All"]
   principal_object_id = azurerm_user_assigned_identity.graph_api_managed_identity.principal_id
   resource_object_id  = azuread_service_principal.msgraph.object_id
 }
@@ -152,7 +160,7 @@ resource "azurerm_key_vault_secret" "cosmos_primary_key" {
 }
 
 resource "azurerm_cosmosdb_sql_database" "cosmosdb" {
-  name                = "aadgovernor"
+  name                = var.service_name
   resource_group_name = azurerm_cosmosdb_account.cosmosaccount.resource_group_name
   account_name        = azurerm_cosmosdb_account.cosmosaccount.name
 
@@ -176,7 +184,6 @@ resource "azurerm_cosmosdb_sql_container" "cosmoscontainer_groups" {
 
 # Azure Function
 resource "random_uuid" "api_user_impersonation_role" {}
-resource "random_uuid" "directory_admin_role" {}
 
 resource "azuread_application" "application_api" {
   display_name     = "${var.service_name}-api-${var.environment}"
@@ -193,7 +200,7 @@ resource "azuread_application" "application_api" {
   }
 
   required_resource_access {
-    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
+    resource_app_id = azuread_service_principal.msgraph.application_id # Microsoft Graph
     resource_access {
       id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" # User.Read
       type = "Scope"
@@ -213,13 +220,34 @@ resource "azuread_application" "application_api" {
     }
   }
 
+  resource "random_uuid" "directory_contributor_role" {}
   app_role {
     allowed_member_types = ["User"]
     description          = "Manage Directories"
-    display_name         = "Directory Admin"
+    display_name         = "Directory Contributor"
     enabled              = true
-    id                   = random_uuid.directory_admin_role.result
-    value                = "DirectoryAdmin"
+    id                   = random_uuid.directory_contributor_role.result
+    value                = "DirectoryContributor"
+  }
+
+  resource "random_uuid" "group_contributor_role" {}
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Manage Groups"
+    display_name         = "Group Contributor"
+    enabled              = true
+    id                   = random_uuid.group_contributor_role.result
+    value                = "GroupContributor"
+  }
+
+  resource "random_uuid" "licensing_contributor_role" {}
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Manage Licensing"
+    display_name         = "Licensing Contributor"
+    enabled              = true
+    id                   = random_uuid.licensing_contributor_role.result
+    value                = "LicensingContributor"
   }
 }
 
