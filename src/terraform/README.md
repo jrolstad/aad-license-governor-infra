@@ -14,9 +14,9 @@ Infrastructure as Code definitions to support the aad-license-governor project.
 | src/Azure/scripts | Powershell | Scripts to run for development use              |
 
 ## Actions
-| Action                                                      | Description                                              |
-| ----------------------------------------------------------- | -------------------------------------------------------- |
-| [continuous-integration](../.github/workflows/ci-build.yml) | Continuous Integration build for the the /src/Azure code |
+| Action                                                                   | Description                                              |
+| ------------------------------------------------------------------------ | -------------------------------------------------------- |
+| [continuous-integration](../../.github/workflows/terraform-ci-build.yml) | Continuous Integration build for the the /src/Azure code |
 
 ## Development Environment Setup
 To configure your develpment environment, use the following steps:
