@@ -21,8 +21,9 @@ variable "subscription_id" {
 }
 
 variable "resource_group_name" {
-  description = "Resource group to deploy resources into"
+  description = "Specific resource group to deploy resources into.  If not supplied, will default to servicename-environmentname"
   type        = string
+  default     = null
 }
 
 variable "service_name" {

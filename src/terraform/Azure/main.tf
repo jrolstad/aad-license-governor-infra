@@ -34,15 +34,22 @@ data "azuread_client_config" "current" {
 
 locals {
   primary_region                = var.regions[0]
-  functions_baseurl             = var.azure_environment == "usgovernment" ? "azurewebsites.us" : "azurewebsites.net"
   api_base_url                  = "${var.service_name}-api-${var.environment}.${local.functions_baseurl}"
   executing_serviceprincipal_id = data.azuread_client_config.current.object_id
   application_owners            = distinct(concat(var.application_owners, [local.executing_serviceprincipal_id]))
+  resource_group_name           = coalesce(var.resource_group_name, "${var.service_name}-${var.environment}")
+}
+
+locals {
+  function_os_type  = "linux"
+  function_version  = "~4"
+  function_runtime  = "dotnet"
+  functions_baseurl = var.azure_environment == "usgovernment" ? "azurewebsites.us" : "azurewebsites.net"
 }
 
 # Foundation
 resource "azurerm_resource_group" "service_resource_group" {
-  name     = var.resource_group_name
+  name     = local.resource_group_name
   location = local.primary_region
 }
 
@@ -263,6 +270,7 @@ resource "azurerm_app_service_plan" "function_serviceplan" {
   resource_group_name = azurerm_resource_group.service_resource_group.name
   location            = azurerm_resource_group.service_resource_group.location
   kind                = "FunctionApp"
+  reserved            = local.function_os_type == "linux" ? true : false # Linux requires a reserved plan
   sku {
     tier = "Dynamic"
     size = "Y1"
@@ -276,9 +284,9 @@ resource "azurerm_function_app" "function_api" {
   app_service_plan_id        = azurerm_app_service_plan.function_serviceplan.id
   storage_account_name       = azurerm_storage_account.storage_account.name
   storage_account_access_key = azurerm_storage_account.storage_account.primary_access_key
-  version                    = "~3"
+  version                    = local.function_version
   https_only                 = true
-
+  os_type                    = local.function_os_type
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.graph_api_managed_identity.id, azurerm_user_assigned_identity.keyvault_api_managed_identity.id]
@@ -310,11 +318,11 @@ resource "azurerm_function_app" "function_api" {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.appinsights.connection_string
     "WEBSITE_RUN_FROM_PACKAGE"              = "1"
     "ASPNETCORE_ENVIRONMENT"                = "Release"
-    "FUNCTIONS_EXTENSION_VERSION"           = "~3"
-    "FUNCTIONS_WORKER_RUNTIME"              = "dotnet-isolated"
-    "Cosmos:BaseUri"                        = azurerm_cosmosdb_account.cosmosaccount.endpoint
-    "KeyVault:BaseUri"                      = azurerm_key_vault.keyvault.vault_uri
-    "KeyVault:ManagedIdentityClientId"      = azurerm_user_assigned_identity.keyvault_api_managed_identity.client_id
+    "FUNCTIONS_EXTENSION_VERSION"           = local.function_version
+    "FUNCTIONS_WORKER_RUNTIME"              = local.function_runtime
+    "Cosmos_BaseUri"                        = azurerm_cosmosdb_account.cosmosaccount.endpoint
+    "KeyVault_BaseUri"                      = azurerm_key_vault.keyvault.vault_uri
+    "KeyVault_ManagedIdentityClientId"      = azurerm_user_assigned_identity.keyvault_api_managed_identity.client_id
 
   }
 }
@@ -327,9 +335,9 @@ resource "azurerm_function_app" "function_worker" {
   app_service_plan_id        = azurerm_app_service_plan.function_serviceplan.id
   storage_account_name       = azurerm_storage_account.storage_account.name
   storage_account_access_key = azurerm_storage_account.storage_account.primary_access_key
-  version                    = "~3"
+  version                    = local.function_version
   https_only                 = true
-
+  os_type                    = local.function_os_type
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.graph_api_managed_identity.id, azurerm_user_assigned_identity.keyvault_api_managed_identity.id]
@@ -346,12 +354,12 @@ resource "azurerm_function_app" "function_worker" {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.appinsights.connection_string
     "WEBSITE_RUN_FROM_PACKAGE"              = "1"
     "ASPNETCORE_ENVIRONMENT"                = "Release"
-    "FUNCTIONS_EXTENSION_VERSION"           = "~3"
-    "FUNCTIONS_WORKER_RUNTIME"              = "dotnet-isolated"
-    "Cosmos:BaseUri"                        = azurerm_cosmosdb_account.cosmosaccount.endpoint
-    "KeyVault:BaseUri"                      = azurerm_key_vault.keyvault.vault_uri
-    "KeyVault:ManagedIdentityClientId"      = azurerm_user_assigned_identity.keyvault_api_managed_identity.client_id
-    "GroupLicenseFunction:ApplyCron"        = "0 0 */10 * * *"
+    "FUNCTIONS_EXTENSION_VERSION"           = local.function_version
+    "FUNCTIONS_WORKER_RUNTIME"              = local.function_runtime
+    "Cosmos_BaseUri"                        = azurerm_cosmosdb_account.cosmosaccount.endpoint
+    "KeyVault_BaseUri"                      = azurerm_key_vault.keyvault.vault_uri
+    "KeyVault_ManagedIdentityClientId"      = azurerm_user_assigned_identity.keyvault_api_managed_identity.client_id
+    "GroupLicenseFunction_ApplyCron"        = "0 0 */10 * * *"
 
   }
 }
