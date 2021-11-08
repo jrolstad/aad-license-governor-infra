@@ -43,7 +43,7 @@ locals {
 locals {
   function_os_type  = "linux"
   function_version  = "~4"
-  function_runtime  = "dotnet"
+  function_runtime  = "dotnet-isolated"
   functions_baseurl = var.azure_environment == "usgovernment" ? "azurewebsites.us" : "azurewebsites.net"
 }
 
