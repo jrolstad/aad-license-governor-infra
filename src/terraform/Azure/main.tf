@@ -367,7 +367,9 @@ resource "azurerm_function_app" "function_worker" {
     "Cosmos_BaseUri"                        = azurerm_cosmosdb_account.cosmosaccount.endpoint
     "KeyVault_BaseUri"                      = azurerm_key_vault.keyvault.vault_uri
     "KeyVault_ManagedIdentityClientId"      = azurerm_user_assigned_identity.keyvault_api_managed_identity.client_id
-    "GroupLicenseFunction_ApplyCron"        = "0 0 */10 * * *"
+    "GroupLicenseFunction_ApplyCron"        = "0 */10 * * * *"
+    "GroupLicenseFunction_MonitorCron"      = "0 0 */6 * * *"
+    "ProductFunction_MonitorCron"           = "0 0 0 * * *"
 
   }
 }
